@@ -6,11 +6,11 @@ An automation system built using **n8n** to streamline and automate Upwork-relat
 ```
 n8n-upwork-automation/
 ├── Upwork-Automation.json
+├── readme.md
+├── demo.md
+├── report.md
 ├── .gitignore
   └── .env.example
-├── demo.md
-├── readme.md
-└── report.md
 ```
 
 ## Project Overview
