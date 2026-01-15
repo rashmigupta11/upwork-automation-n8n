@@ -10,6 +10,7 @@ n8n-upwork-automation/
 ├── demo-video.md
 ├── report.md
 ├── .gitignore
+├── credentials-template
   └── .env.example
 ```
 
