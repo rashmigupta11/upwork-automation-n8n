@@ -51,6 +51,7 @@ Resolved by explicitly referencing upstream node data using n8n expressions such
 
 ```text
 {{ $('Loop Over Items').item.json.title }}
+```
 
 ## Mandatory Enhancements Implemented
 
