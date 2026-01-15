@@ -7,7 +7,7 @@ An automation system built using **n8n** to streamline and automate Upwork-relat
 n8n-upwork-automation/
 ├── Upwork-Automation.json
 ├── readme.md
-├── demo.md
+├── demo-video.md
 ├── report.md
 ├── .gitignore
   └── .env.example
@@ -66,7 +66,7 @@ Activate the workflow
 
 ---
 
-Step 5: Execution
+### Step 5: Execution
 Trigger the workflow using the configured trigger node
 Monitor execution logs in n8n
 Verify workflow output
