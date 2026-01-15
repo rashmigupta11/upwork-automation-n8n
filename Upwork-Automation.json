@@ -1,0 +1,823 @@
+{
+  "name": "Upwork automation",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.apify.com/v2/acts/neatrat~upwork-job-scraper/run-sync-get-dataset-items?",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "token"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"query\": \"n8n\",\n  \"maxJobAge\": {\n    \"value\": 6,\n    \"unit\": \"hours\"\n  }\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        192,
+        240
+      ],
+      "id": "29ef3764-0fb0-4015-99dd-a5f27faa59aa",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "dbd4dbbe-4f44-4db6-b155-534e848b13a9",
+              "name": "title",
+              "value": "={{ $json.title }}",
+              "type": "string"
+            },
+            {
+              "id": "1e6372fe-feb6-4f6b-bd21-5d78bf26b4b7",
+              "name": "description",
+              "value": "={{ $json.description }}",
+              "type": "string"
+            },
+            {
+              "id": "f487bf4c-eece-435e-8ac4-39028cb262fe",
+              "name": "url",
+              "value": "={{ $json.url }}",
+              "type": "string"
+            },
+            {
+              "id": "7d870236-fdbb-4382-bafd-9da2cfcd07aa",
+              "name": "relativeDate",
+              "value": "={{ $json.relativeDate }}",
+              "type": "string"
+            },
+            {
+              "id": "53be8665-16bb-42a0-8529-0f3ede70137e",
+              "name": "jobType",
+              "value": "={{ $json.jobType }}",
+              "type": "string"
+            },
+            {
+              "id": "f7d6d248-2193-4684-8406-5b112a145abf",
+              "name": "experienceLevel",
+              "value": "={{ $json.experienceLevel }}",
+              "type": "string"
+            },
+            {
+              "id": "0d08a144-9edf-4745-8489-4350976cb5f0",
+              "name": "Posted",
+              "value": "={{ $json.relativeDate }}",
+              "type": "string"
+            },
+            {
+              "id": "fd77dafb-ce6f-4eff-b9fa-d2b0934261ff",
+              "name": "n8n_score",
+              "value": "={{ \n  $json.description.toLowerCase().includes('n8n') ? 4 : -2 \n}}\n",
+              "type": "number"
+            },
+            {
+              "id": "00cd910f-a5a8-4ffc-ba77-0b59cba9f581",
+              "name": "=automation_score",
+              "value": "={{ \n  $json.description.toLowerCase().includes('automation') ? 2 : -1 \n}}\n",
+              "type": "number"
+            },
+            {
+              "id": "ac6ca5d0-5160-4ec9-8231-0f945ae39d2a",
+              "name": "=ai_score",
+              "value": "={{ \n  (\n    $json.description.toLowerCase().includes('ai') ||\n    $json.description.toLowerCase().includes('llm') ||\n    $json.description.toLowerCase().includes('chatbot')\n  ) ? 2 : -1\n}}\n",
+              "type": "number"
+            },
+            {
+              "id": "490f429d-93f7-481c-8e60-b03452b8b6d9",
+              "name": "custom_skill_score",
+              "value": "={{\n  Math.min(\n    9,\n    Math.max(\n      1,\n      (\n        ($json.description.toLowerCase().includes('n8n') ? 4 : 0) +\n        (\n          $json.description.toLowerCase().includes('automation') ||\n          $json.description.toLowerCase().includes('workflow')\n          ? 2 : 0\n        ) +\n        (\n          $json.description.toLowerCase().includes('api') ||\n          $json.description.toLowerCase().includes('integration') ||\n          $json.description.toLowerCase().includes('crm')\n          ? 2 : 0\n        ) +\n        (\n          $json.description.toLowerCase().includes('ai') ||\n          $json.description.toLowerCase().includes('chatbot') ||\n          $json.description.toLowerCase().includes('agent')\n          ? 1 : 0\n        )\n      )\n    )\n  )\n}}\n",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        352,
+        240
+      ],
+      "id": "e04b20bc-5dc0-4578-a7b7-be9f9a54b054",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"score\": \"X/10\",\n  \"priority\": \"High | Medium | Low\",\n  \"reason\": \"One short paragraph explaining why\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        944,
+        288
+      ],
+      "id": "bb32f380-33db-4461-8287-de8999d55c4a",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an expert Upwork Job Scoring Agent trained to evaluate jobs specifically for Morgan (an automation builder specializing in n8n, AI automations, workflow systems, voice agents, and Twilio/Retell).\n\nYour task is to analyze the job below and score how good it is for Morgan RIGHT NOW based on his current goals:\n- get quick wins\n- land fast jobs\n- build portfolio\n- collect testimonials\n- increase Upwork profile history\n- avoid time-wasting clients\n\n- focus on automation, AI, workflow, systems, voice agents, CRM, Twilio/Retell, n8n-related work\n\n### Output Format JSON (required):\n\n{\n  \"score\": \"X/10\",\n  \"reason\": \"One short paragraph explaining why\",\n  \"priority\": \"High | Medium | Low\"\n\nIMPORTANT — PRIORITY RULES (MANDATORY, NO EXCEPTIONS):\n\n- If score is 8, 9, or 10 → priority MUST be \"High\"\n- If score is 5, 6, or 7 → priority MUST be \"Medium\"\n- If score is 0, 1, 2, 3, or 4 → priority MUST be \"Low\"\n\nYou are NOT allowed to choose priority independently.\nPriority MUST strictly follow the numeric score.\n}\n\n### Scoring rules:\nHIGH PRIORITY (8–10/10) if:\n\n- Job is clearly automation-related (n8n, automation, workflow, AI, chatbot, voice agent, Twilio, Retell, Zapier, Make, API integrations)\n- Client looks easy to work with\n- Budget is reasonable\n- Job can be completed quickly (under 48 hours)\n- Client has history OR high payment verification\n\n\n\nMEDIUM PRIORITY (5–7/10) if:\n- Some automation work but unclear scope\n- Job might be longer than ideal\n- Client is new with no history\n- Budget is low but still worth doing for profile building\n\nLOW PRIORITY (1–4/10) if:\n- Not automation related\n- Job looks like a headache\n- Client unclear / bad reviews / very low rate\n- WordPress / graphic design / irrelevant work\n- Long-term dev projects unsuitable for quick wins\n\n\n\n### Job Data:\nTitle:{{ $('Edit Fields').item.json.title }}\nDescription:{{ $('Edit Fields').item.json.description }}\nURL:{{ $('Edit Fields').item.json.url }}\nPosted:{{ $('Edit Fields').item.json.Posted }}\n\nJob Type:{{ $('Edit Fields').item.json.jobType }}\nExperience Level:{{ $('Edit Fields').item.json.experienceLevel }}\n\nIMPORTANT:\nA preliminary skill score has already been calculated using deterministic rules.\nPre-calculated Skill Score: {{ $json.custom_skill_score }}\n\nIMPORTANT:\n\nA preliminary skill relevance score has been calculated using deterministic rules:\nPre-calculated Skill Score: {{ $json.custom_skill_score }}\n\nThis score is ONLY a rough signal of keyword relevance.\n\nYou MUST prioritize CONTEXTUAL INTENT over keywords.\n\nYou are allowed to significantly increase or decrease the final score\nbased on:\n- whether skills are REQUIRED vs optional\n- clarity of scope\n- urgency\n- whether this looks like a quick, focused task\n- whether the client expects deep experience or casual familiarity\n\nIf skills are mentioned as \"nice to have\", \"preferred\", or \"a plus\",\nyou SHOULD LOWER the score.\n\nIf skills are mentioned as \"required\", \"mandatory\", or clearly essential,\nyou SHOULD INCREASE the score.\n\nFinal score must reflect REAL PRIORITY for quick wins,\nnot keyword count.\n\nBefore responding, verify:\n- Score and priority are consistent.\n- A score of 8+ NEVER has Medium or Low priority.\nIf inconsistent, FIX IT before output.\n\nLOW PRIORITY OVERRIDES:\n\nIf the job description includes ANY of the following signals,\nyou MUST reduce the score and may classify it as LOW priority\neven if automation or AI keywords are present:\n\n- The work is long-term, ongoing, full-time, or part-time\n- The scope is vague, exploratory, or \"to be discussed\"\n- The client is looking for an agency or large team\n- The job does not describe a clear, quick, well-defined task\n\n\n\n",
+        "hasOutputParser": true,
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        864,
+        48
+      ],
+      "id": "45b7a9b6-8031-4cf5-babc-6c60309f0b50",
+      "name": "Analyse Job"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 8
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        224,
+        32
+      ],
+      "id": "b676feff-e8e8-4375-bfbd-b3d22d5b0f8a",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-120b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        800,
+        256
+      ],
+      "id": "f059abaa-b24c-46d4-8ef5-77a10c994257",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "4eEKxsw1Z6EB6NhR",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appJzARaJVAbEyInW",
+          "mode": "list",
+          "cachedResultName": "Upwork Automation EDXSO Assignment",
+          "cachedResultUrl": "https://airtable.com/appJzARaJVAbEyInW"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblqPE6NJilk9e55T",
+          "mode": "list",
+          "cachedResultName": "Table 1",
+          "cachedResultUrl": "https://airtable.com/appJzARaJVAbEyInW/tblqPE6NJilk9e55T"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Priority": "={{ $json.output.priority }}",
+            "Score": "={{ $json.output.score }}",
+            "Reasoning": "={{ $json.output.reason }}",
+            "Job Description": "={{ $('Loop Over Items').item.json.description }}",
+            "Job Title": "={{ $('Loop Over Items').item.json.title }}",
+            "URL": "={{ $('HTTP Request').item.json.url }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Job Title",
+              "displayName": "Job Title",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Job Description",
+              "displayName": "Job Description",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Score",
+              "displayName": "Score",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Priority",
+              "displayName": "Priority",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Reasoning",
+              "displayName": "Reasoning",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "URL",
+              "displayName": "URL",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Posted Time",
+              "displayName": "Posted Time",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Post Time",
+              "displayName": "Post Time",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        1136,
+        272
+      ],
+      "id": "3e37545c-9b38-4ced-b930-d5962df8559d",
+      "name": "Create a record",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "k1LKkaTHoRTPdTH3",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        560,
+        240
+      ],
+      "id": "7b8c1b78-ceba-4142-883a-b8e450c0f6f3",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        672,
+        48
+      ],
+      "id": "eac5ed37-27e6-49a9-a60d-a223ddfcaa2f",
+      "name": "Wait1",
+      "webhookId": "fdaf2e68-3061-4caa-848f-5a6bd5bb5006"
+    },
+    {
+      "parameters": {
+        "sendTo": "rashmig1275@gmail.com",
+        "subject": "={{ $json.subject }}",
+        "message": "={{ $json.emailBody }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1040,
+        496
+      ],
+      "id": "194e555a-fc9d-48a4-b96a-010d8d70e961",
+      "name": "Send a message",
+      "webhookId": "8de4cf82-f91d-4cc5-8321-ce96e7e98259",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "reCpyyynfqpUwDQ7",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Get all jobs from the input\nconst allJobs = $input.all();\nconst highPriorityJobs = [];\n\n// 2. FILTER LOOP: Only keep jobs with Score 8, 9, or 10\nfor (const item of allJobs) {\n    const data = item.json.fields || item.json;\n    \n    // Parse the score (turns \"6/10\" into the number 6)\n    // We treat \"N/A\" as 0\n    let scoreString = (data[\"Score\"] || data[\"score\"] || \"0\").toString();\n    let scoreNumber = parseInt(scoreString); // Extracts the first number it finds\n\n    // STRICT FILTER: Only allow scores of 8, 9, or 10\n    if (scoreNumber >= 8) {\n        highPriorityJobs.push(item);\n    }\n}\n\n// 3. STOP if no high-priority jobs exist\nif (highPriorityJobs.length === 0) {\n    return []; \n}\n\n// 4. Build the Professional HTML\nlet emailHtml = `\n<div style=\"font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;\">\n  <div style=\"background-color: #2c3e50; padding: 20px; text-align: center;\">\n    <h2 style=\"color: #ffffff; margin: 0; font-size: 22px;\">\n      🚀 High Priority Job Digest\n    </h2>\n    <p style=\"color: #bdc3c7; margin: 5px 0 0 0; font-size: 14px;\">\n      Found ${highPriorityJobs.length} top-tier matches for you\n    </p>\n  </div>\n  \n  <div style=\"padding: 20px;\">\n`;\n\nfor (const item of highPriorityJobs) {\n    const data = item.json.fields || item.json;\n    \n    // Get Data (with fallbacks)\n    const title = data[\"Job Title\"] || data[\"title\"] || \"Job Opportunity\";\n    const score = data[\"Score\"] || data[\"score\"] || \"8\"; // Default to 8 if valid\n    const url = data[\"URL\"] || data[\"url\"] || \"#\";\n    // Check multiple casing options for Reason\n    const reason = data[\"Reason\"] || data[\"reason\"] || \"Highly rated opportunity matching your automation criteria.\";\n\n    emailHtml += `\n    <div style=\"border: 1px solid #eee; border-radius: 6px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);\">\n      <div style=\"background-color: #f8f9fa; padding: 12px 15px; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: space-between;\">\n        <span style=\"background-color: #27ae60; color: white; padding: 4px 10px; border-radius: 12px; font-weight: bold; font-size: 12px;\">\n          Score: ${score}\n        </span>\n      </div>\n      <div style=\"padding: 15px;\">\n        <h3 style=\"margin: 0 0 10px 0; font-size: 18px; line-height: 1.4;\">\n          <a href=\"${url}\" style=\"text-decoration: none; color: #2980b9;\">${title}</a>\n        </h3>\n        <p style=\"margin: 0; color: #555; font-size: 14px; line-height: 1.5; background-color: #fff8e1; padding: 10px; border-radius: 4px; border-left: 3px solid #f1c40f;\">\n          <strong>💡 Why this fits:</strong> ${reason}\n        </p>\n        <div style=\"margin-top: 15px;\">\n           <a href=\"${url}\" style=\"display: inline-block; background-color: #3498db; color: white; text-decoration: none; padding: 8px 16px; border-radius: 4px; font-size: 14px; font-weight: bold;\">Apply on Upwork &rarr;</a>\n        </div>\n      </div>\n    </div>`;\n}\n\nemailHtml += `\n  </div>\n  <div style=\"background-color: #f8f9fa; padding: 15px; text-align: center; font-size: 12px; color: #999; border-top: 1px solid #eee;\">\n    Automated by n8n\n  </div>\n</div>`;\n\nreturn [{\n    json: {\n        emailBody: emailHtml,\n        subject: `🔥 ALERT: ${highPriorityJobs.length} High-Priority Jobs Found (Score 8+)`\n    }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        496
+      ],
+      "id": "5dd61d05-f77c-4d0e-90d6-985fbbdb9ac0",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "pinData": {
+    "HTTP Request": [
+      {
+        "json": {
+          "id": "2011520315036545910",
+          "subId": "~022011520315036545910",
+          "title": "AI Automation Engineer: Financial Systems Integration (APIs etc.) ~ $300/month +Bonuses",
+          "description": "Hello Upwork Family,\nThis is a focused automation role supporting a financial advisory systems integration project.\n\nWe’re looking for someone who can execute clearly defined workflows, follow architecture guidance, and implement reliable automations across multiple tools.\n\nThis is not a senior architect role; strategy is already defined. We need a strong implementer.\n\nSystems involved:\nWealthbox (CRM)\nPreciseFP (intake)\nRightCapital (planning)\nSuiteDash (client portal)\n\nWhat you’ll work on:\nWorkflow implementation\nAPI or webhook-based data flows\nAutomation testing and validation\nLight documentation\n\nTime & Pay:\n$300/month\n+Generous Bonuses\nPhase-based scope\nClear priorities and timelines\nOpportunity to continue with us on post-launch\n\nTo apply for this role kinndly answer that following questions:\n1. Have you worked with APIs or webhooks beyond Zapier? And can you create custom APIs?\n2. How do you ensure data stays consistent across systems?\n3. Are you comfortable working from an existing technical plan?\n\nI look forward to working with you. ✨",
+          "url": "https://www.upwork.com/jobs/Automation-Engineer-Financial-Systems-Integration-APIs-etc-300-month-Bonuses_~022011520315036545910/?referrer_url_path=/nx/search/jobs/",
+          "budget": "$300.00",
+          "relativeDate": "Posted 2 minutes ago",
+          "absoluteDate": "2026-01-14T19:26:30.275Z",
+          "jobType": "Fixed",
+          "experienceLevel": "Intermediate",
+          "paymentVerified": true,
+          "tags": [
+            "n8n",
+            "JavaScript",
+            "OpenAI API",
+            "API Integration",
+            "Zapier",
+            "API",
+            "API Development"
+          ],
+          "clientLocation": "United States",
+          "clientHireRatePercent": 70,
+          "clientTotalSpent": 0,
+          "clientRating": 4.68,
+          "allowedApplicantCountries": null
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "id": "2011520159884866367",
+          "subId": "~022011520159884866367",
+          "title": "n8n Automation Expert Needed",
+          "description": "Seeking an expert to automate workflows and integrate APIs using n8n. The role involves creating and managing automated workflows, integrating various APIs, and ensuring seamless data flow between systems. Ideal candidates will have extensive experience with n8n and a strong understanding of API integration.",
+          "url": "https://www.upwork.com/jobs/span-class-highlight-n8n-span-Automation-Expert-Needed_~022011520159884866367/?referrer_url_path=/nx/search/jobs/",
+          "budget": "$20.00",
+          "relativeDate": "Posted 2 minutes ago",
+          "absoluteDate": "2026-01-14T19:25:53.321Z",
+          "jobType": "Fixed",
+          "experienceLevel": "Intermediate",
+          "paymentVerified": true,
+          "tags": [
+            "Zapier",
+            "HubSpot",
+            "Marketing Automation",
+            "SAP"
+          ],
+          "clientLocation": "United States",
+          "clientHireRatePercent": 82,
+          "clientTotalSpent": 4108,
+          "clientRating": 4.97,
+          "allowedApplicantCountries": null
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "id": "2011517920966361941",
+          "subId": "~022011517920966361941",
+          "title": "Airtable Client Decision Dashboard Builder",
+          "description": "Overview\nWe are an MSP and we want to build a client-facing decision dashboard that turns messy IT asset data into simple executive decisions.\n\nExample decision we want clients to see:\nClient has 10 computers\nOur standard is to replace computers before the 4-year mark\n3 computers are 5 years old\nDashboard should show: Replace 3 computers now with a clear recommendation and cost estimate\nWe currently use ConnectWise and may migrate to NinjaRMM in the future, so the solution should be built in a way that can adapt to different data sources.\n\nProject Goals\nBuild a clean system that allows us to:\nTrack client assets (computers and servers)\nApply lifecycle rules (example replace computers over 4 years old)\nDisplay a simple decision dashboard per client\nAllow Approve or Defer type decisions (optional but preferred)\nKeep it easy enough for a CEO and client to understand\n\nScope and Deliverables\nPhase 1 MVP Pilot for 1 Client\nBuild an Airtable base that includes:\nA) Tables\nClients\nAssets (computers, servers)\nStandards or Policies (example replace computers at 4 years)\nDecisions or Recommendations (example Replace Now, Replace Soon, Healthy)\nB) Fields and Logic\nAsset purchase date OR install date OR age\nCalculated age in years\nLifecycle status:\nHealthy\nReplace Soon (within 6 months)\nReplace Now (past 4 years)\nDecision summary rollups per client (counts and totals)\nC) Client Dashboard\nBuild a clean Airtable Interface (preferred) or view that shows:\nTotal computers\nNumber Replace Now\nNumber Replace Soon\nThis Month’s Decisions list\nRecommended action plus reason\nEstimated replacement cost (can be a range or per-device estimate)\nD) Output\nWe want a working pilot for one real client first.\nPhase 2 Optional or Nice-to-Have\nIf MVP goes well, we may extend scope to include:\nAutomation or syncing from ConnectWise or RMM tool\nApprove or Defer workflow\nPush approved decisions into ClickUp or ConnectWise projects\nAdd other decision types (backup compliance, warranty expiration, server lifecycle)\nData Source\nFor MVP, we can provide data by:\nCSV export from ConnectWise\nManual sample data\nOr another simple import method\nThe goal is to prove the dashboard works before building complex integrations.\nRequired Skills\nAirtable base design (tables, linked records)\nAirtable formulas, rollups, filtering\nAirtable Interfaces experience\nAbility to design a client-friendly UI (executive-level simplicity)\nApplication Requirements Important\n\nTo be considered, you must include:\nA Loom video walkthrough showing Airtable dashboards or Interfaces you have built\n1 to 2 examples of Airtable work (screenshots or links are fine)\nA short explanation of how you would structure the Airtable tables for clients to assets to decisions\nConfirmation whether you have worked with MSPs, ConnectWise, or RMM data before (yes or no)\nYour estimated timeline and cost for MVP\nPreferred Skills Bonus\nMSP experience (ConnectWise, Ninja, RMM knowledge)\nZapier or Make.com automation\nAPI integration experience\nClient portal or dashboard experience\nSuccess Criteria\nThis project is successful if:\nA client can open a dashboard and immediately understand:\nwhat decisions they need to make\nwhy it matters\nwhat it will cost\nThe system is easy for our internal team to maintain and expand\nTimeline\nMVP Pilot: 7 to 14 days from kickoff",
+          "url": "https://www.upwork.com/jobs/Airtable-Client-Decision-Dashboard-Builder_~022011517920966361941/?referrer_url_path=/nx/search/jobs/",
+          "budget": "20 - 50",
+          "relativeDate": "Posted 11 minutes ago",
+          "absoluteDate": "2026-01-14T19:16:59.514Z",
+          "jobType": "Hourly",
+          "experienceLevel": "Intermediate",
+          "paymentVerified": true,
+          "tags": [
+            "n8n",
+            "Dashboard",
+            "Airtable",
+            "Data Visualization",
+            "System Administration",
+            "Business Intelligence"
+          ],
+          "clientLocation": "United States",
+          "clientHireRatePercent": 24,
+          "clientTotalSpent": 6452,
+          "clientRating": 5,
+          "allowedApplicantCountries": null
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "id": "2011516712081529637",
+          "subId": "~022011516712081529637",
+          "title": "N8N Automation Specialist for Business Data",
+          "description": "Seeking an N8N automation specialist to develop automations for extracting business data and social media content. The role involves creating processes to find specific businesses, gather their information, and organize it in spreadsheets for sales teams. Additionally, the specialist will analyze trending social media content in a niche and craft high-performing ads and scripts.",
+          "url": "https://www.upwork.com/jobs/span-class-highlight-N8N-span-Automation-Specialist-for-Business-Data_~022011516712081529637/?referrer_url_path=/nx/search/jobs/",
+          "budget": "5 - 25",
+          "relativeDate": "Posted 16 minutes ago",
+          "absoluteDate": "2026-01-14T19:12:11.278Z",
+          "jobType": "Hourly",
+          "experienceLevel": "Intermediate",
+          "paymentVerified": true,
+          "tags": [
+            "Data Mining",
+            "Business Analysis",
+            "Business Intelligence",
+            "Data Analysis"
+          ],
+          "clientLocation": "GBR",
+          "clientHireRatePercent": 200,
+          "clientTotalSpent": 160,
+          "clientRating": 0,
+          "allowedApplicantCountries": null
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "id": "2011511858636249134",
+          "subId": "~022011511858636249134",
+          "title": "Hiring Expert n8n Engineers for Production-Ready Automation Workflows",
+          "description": "We are an AI automation agency, and as our client base grows, our workflows are becoming more complex. We’re looking to hire experienced n8n Engineers who work in n8n daily and have built production-ready, scalable workflows.\n\nThis is not a beginner role. We need specialists who deeply understand n8n and real-world automation challenges.\n\nRequirements\n\nStrong hands-on experience with n8n in production\n\nAbility to build, maintain, and debug complex workflows\n\nSolid understanding of APIs, webhooks, authentication, error handling, and data transformations\n\nExperience optimizing workflows for reliability and scale\n\nMake.com experience is a plus\n\nHow to apply (required)\n\nTo be considered, your proposal must follow these steps:\n\nStart your proposal with:\n“let’s grow”\n\nSubmit a Loom video where you:\n\nIntroduce yourself\n\nWalk through the most complex automation project you’ve built (preferably in n8n)\n\nExplain the challenges and how you solved them\n\nInclude:\n\nYour hourly rate\n\nYour availability to interview within the next two weeks\n\nYour weekly availability\n\nWe’re looking for long-term partners as our agency scales. If n8n is what you live in daily, we’d love to hear from you.",
+          "url": "https://www.upwork.com/jobs/Hiring-Expert-span-class-highlight-n8n-span-Engineers-for-Production-Ready-Automation-Workflows_~022011511858636249134/?referrer_url_path=/nx/search/jobs/",
+          "budget": "N/A",
+          "relativeDate": "Posted 35 minutes ago",
+          "absoluteDate": "2026-01-14T18:52:54.165Z",
+          "jobType": "Hourly",
+          "experienceLevel": "Expert",
+          "paymentVerified": true,
+          "tags": [
+            "n8n",
+            "Make.com",
+            "Python",
+            "JavaScript"
+          ],
+          "clientLocation": "United States",
+          "clientHireRatePercent": 82,
+          "clientTotalSpent": 1839,
+          "clientRating": 4.68,
+          "allowedApplicantCountries": null
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "id": "2011499456963900223",
+          "subId": "~022011499456963900223",
+          "title": "N8n progaming",
+          "description": "I need help fine tuning my n8n/Gmail automation to include my signature line and for Chat GPT to access certain files and my calendar with replying to emails. Can you help with this?",
+          "url": "https://www.upwork.com/jobs/span-class-highlight-N8n-span-progaming_~022011499456963900223/?referrer_url_path=/nx/search/jobs/",
+          "budget": "N/A",
+          "relativeDate": "Posted 1 hour ago",
+          "absoluteDate": "2026-01-14T18:03:37.265Z",
+          "jobType": "Hourly",
+          "experienceLevel": "Intermediate",
+          "paymentVerified": true,
+          "tags": [
+            "n8n",
+            "Chatbot Development",
+            "Artificial Intelligence",
+            "AI Agent Development",
+            "Machine Learning",
+            "API"
+          ],
+          "clientLocation": "USA",
+          "clientHireRatePercent": null,
+          "clientTotalSpent": 0,
+          "clientRating": 0,
+          "allowedApplicantCountries": null
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "id": "2011450304187953983",
+          "subId": "~022011450304187953983",
+          "title": "Fix n8n Web Scraper Automation Not Sending Google Leads to Google Sheets",
+          "description": "I’m a restaurant owner using an n8n workflow to scrape restaurant leads from Google and automatically save them into a Google Sheet. The workflow runs successfully, but the data is not being written to the Google Sheet as expected.\n\nI’m looking for someone experienced with n8n automations and Google Sheets integrations to review the existing workflow, identify the issue with the node configuration or data mapping, and fix it so the leads are properly saved.\n\nThis is a small troubleshooting and fix task. No new features or major changes are needed, just making the current setup work correctly.\n\nExperience with n8n, web scraping workflows, and Google Sheets is required.",
+          "url": "https://www.upwork.com/jobs/Fix-span-class-highlight-n8n-span-Web-Scraper-Automation-Not-Sending-Google-Leads-Google-Sheets_~022011450304187953983/?referrer_url_path=/nx/search/jobs/",
+          "budget": "$10.00",
+          "relativeDate": "Posted 1 hour ago",
+          "absoluteDate": "2026-01-14T14:48:18.420Z",
+          "jobType": "Fixed",
+          "experienceLevel": "Intermediate",
+          "paymentVerified": true,
+          "tags": [
+            "n8n",
+            "Web Design",
+            "Wix",
+            "WordPress",
+            "Adobe Illustrator",
+            "Versatile Logo Design",
+            "Wix SEO Wiz"
+          ],
+          "clientLocation": "United States",
+          "clientHireRatePercent": 89,
+          "clientTotalSpent": 3008,
+          "clientRating": 5,
+          "allowedApplicantCountries": null
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "id": "2011494194192256841",
+          "subId": "~022011494194192256841",
+          "title": "E-Commerce Automation and Data Systems Specialist (Amazon SP-API, Sheets, Shopify)",
+          "description": "We are a global premium coffee brand selling across Amazon, Shopify, and other platforms. We are hiring a developer-minded E-Commerce Automation and Data Systems Specialist to own our automation, reporting, and data infrastructure end to end.\n\nThis is a hands-on technical role focused on Amazon SP-API, Google Sheets, Google Apps Script, and automation tools (Make/n8n/Zapier). You will centralize Amazon data (orders, FBA, inventory, ads, fees, refunds/returns), build reliable daily refreshes, and create KPI dashboards and alerts used by leadership, marketing, finance, and operations.\n\nYou will also support off-Amazon customer and marketing automations, and help automate accounting and operations workflows (OCR invoices, PO/COGS tracking, supplier and payment reporting).\n\nMust-have: real SP-API experience (LWA auth, refresh tokens, throttling, error handling, JSON parsing). Developer-level thinking required, but this is not a pure software engineering position.\n\nPlease include your CV with your Upwork application.",
+          "url": "https://www.upwork.com/jobs/Commerce-Automation-and-Data-Systems-Specialist-Amazon-API-Sheets-Shopify_~022011494194192256841/?referrer_url_path=/nx/search/jobs/",
+          "budget": "N/A",
+          "relativeDate": "Posted 1 hour ago",
+          "absoluteDate": "2026-01-14T17:42:42.668Z",
+          "jobType": "Hourly",
+          "experienceLevel": "Intermediate",
+          "paymentVerified": true,
+          "tags": [
+            "API Integration",
+            "JavaScript",
+            "Google Apps Script",
+            "Google Sheets Automation",
+            "Back-End Development",
+            "JSON"
+          ],
+          "clientLocation": "United States",
+          "clientHireRatePercent": 163,
+          "clientTotalSpent": 6942,
+          "clientRating": 4.92,
+          "allowedApplicantCountries": null
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "id": "2011493965666294565",
+          "subId": "~022011493965666294565",
+          "title": "Experienced n8n + Ollama Developer Needed for Workflow Automation",
+          "description": "We are seeking an experienced n8n and Ollama developer to create a robust workflow that processes interview questions and responses using Llama 3.3 70B. The ideal candidate will have a solid understanding of automation tools and experience with Llama's capabilities. You will be responsible for ensuring seamless integration and efficient processing of inputs and outputs. If you have expertise in workflow automation and a passion for leveraging AI, we want to hear from you!\n\nThe Challenge:\nOur current AI scoring system (Cassidy.ai) fails 33% of the time, returning fake default scores instead of real analysis. We need to migrate to a self-hosted solution with full control and observability.\n\nThe Solution:\nBuild an n8n workflow that processes 10-15 interview questions through Ollama (Llama 3.3 70B on,  a Hetzner (or similar) GPU), scoring multiple organizational health indicators per question response, then aggregating results. This replaces processing 134 indicators individually.\n\nKey Requirements:\nSet up and secure Ollama on Hetzner GPU server (Llama 3.3 70B)\nBuild n8n workflow using question-first approach (20+ LLM calls, not 134)\nImplement aggregation logic for indicators mentioned multiple times\nValidate evidence exists for every scored indicator (no fake scores)\nEnsure 85%+ consistency across repeated runs of same transcript\nStore results in MySQL (Hostinger)\n\nDeliverables:\nWorking n8n workflow with full documentation\nOllama server configured with remote access and security\nGitHub repo with all prompts, schemas, and code\nTest results proving consistency (5 transcripts × 3 runs each)\n1-hour handover session\n\nTimeline: 2 weeks maximum\nWeek 1: Setup + build + test on sample data\nWeek 2: Process real transcripts + tune + deploy\n\nMust Have:\nProven n8n workflow experience (portfolio required)\nLLM API integration (OpenAI/Anthropic/Ollama)\nJavaScript proficiency for aggregation logic\nLinux server administration basics\nAvailable to start within 7 days\n\nNice to Have:\nPrevious Ollama deployments\nExperience with organizational/HR analytics\nPrompt engineering expertise\nMySQL optimization knowledge",
+          "url": "https://www.upwork.com/jobs/Experienced-span-class-highlight-n8n-span-Ollama-Developer-Needed-for-Workflow-Automation_~022011493965666294565/?referrer_url_path=/nx/search/jobs/",
+          "budget": "$3,000.00",
+          "relativeDate": "Posted 1 hour ago",
+          "absoluteDate": "2026-01-14T17:41:48.016Z",
+          "jobType": "Fixed",
+          "experienceLevel": "Expert",
+          "paymentVerified": false,
+          "tags": [
+            "n8n",
+            "JavaScript",
+            "Automation",
+            "API",
+            "Java",
+            "Python",
+            "Linux System Administration"
+          ],
+          "clientLocation": "France",
+          "clientHireRatePercent": 0,
+          "clientTotalSpent": 0,
+          "clientRating": 0,
+          "allowedApplicantCountries": null
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "id": "2011488857525859190",
+          "subId": "~022011488857525859190",
+          "title": "AI Developer for Automotive Services",
+          "description": "Seeking an experienced AI developer to create conversational and voice agents for automotive services. These agents will manage incoming calls and messages, qualify prospects, answer client questions, and schedule appointments, integrating with CRM, calendars, and messaging tools. Ideal candidates will have operational skills, not beginners. Experience with OpenAI/GPT-4, voice AI (Twilio), chatbot development, automation tools (Zapier, Make, n8n), and API/webhook integrations is essential. Long-term collaboration possible for the right profile.",
+          "url": "https://www.upwork.com/jobs/Developer-for-Automotive-Services_~022011488857525859190/?referrer_url_path=/nx/search/jobs/",
+          "budget": "$300.00",
+          "relativeDate": "Posted 2 hours ago",
+          "absoluteDate": "2026-01-14T17:21:30.274Z",
+          "jobType": "Fixed",
+          "experienceLevel": "Intermediate",
+          "paymentVerified": true,
+          "tags": [
+            "Artificial Intelligence",
+            "OpenAI API",
+            "API Integration",
+            "Automation",
+            "Zapier"
+          ],
+          "clientLocation": "France",
+          "clientHireRatePercent": 0,
+          "clientTotalSpent": 0,
+          "clientRating": 0,
+          "allowedApplicantCountries": null
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Analyse Job",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyse Job": {
+      "main": [
+        [
+          {
+            "node": "Create a record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Analyse Job",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "Analyse Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a record": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "7c384b06-6998-49e3-a544-0ad118d2d904",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "246c7ee9ddcc720afdb67c15707f9ffd7ad46db464dc682acf27f2280aa9ec1a"
+  },
+  "id": "Ri9g1TS7YkRHDLcK",
+  "tags": []
+}
