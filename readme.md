@@ -40,33 +40,21 @@ The repository contains:
 3. Upload `Upwork-Automation.json`
 4. Save the workflow
 
----
-
-### Step 2: Environment Configuration
-1. Create a `.env` file in the project root
-2. Define all required environment variables
-
-```env
-UPWORK_API_KEY=
-UPWORK_CLIENT_ID=
-UPWORK_CLIENT_SECRET=
-Refer to .env.example for variable names.
-```
-### Step 3: Credential Mapping
+### Step 2: Credential Mapping
 Open Credentials in n8n
 Create credentials for the APIs used in the workflow
 Attach credentials to the corresponding workflow nodes
 
 ---
 
-### Step 4: Workflow Activation
+### Step 3: Workflow Activation
 Open the imported workflow
 Validate node configurations
 Activate the workflow
 
 ---
 
-### Step 5: Execution
+### Step 4: Execution
 Trigger the workflow using the configured trigger node
 Monitor execution logs in n8n
 Verify workflow output
