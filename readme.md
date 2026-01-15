@@ -2,10 +2,8 @@
 
 An automation system built using **n8n** to streamline and automate Upwork-related processes using API-based integrations.
 
----
-
 ## Repository Architecture
-
+```
 n8n-upwork-automation/
 ├── Upwork-Automation.json
 ├── .gitignore
@@ -13,7 +11,7 @@ n8n-upwork-automation/
 ├── demo.md
 ├── readme.md
 └── report.md
----
+```
 
 ## Project Overview
 
@@ -53,7 +51,7 @@ UPWORK_API_KEY=
 UPWORK_CLIENT_ID=
 UPWORK_CLIENT_SECRET=
 Refer to .env.example for variable names.
-
+```
 ### Step 3: Credential Mapping
 Open Credentials in n8n
 Create credentials for the APIs used in the workflow
